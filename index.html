@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growth — Dossiê de Prospecção</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "violeta": { "100": "#F5E8FA", "200": "#DEAAF4", "300": "#B865DB", "500": "#8418AB", "600": "#540B6E" },
+            "verde-tech": { "100": "#DFF4F0", "200": "#8CE5CD", "300": "#3CCBAC", "500": "#009F7F" },
+            "cinza": { "100": "#F2F2F2", "200": "#D5D3D9", "300": "#AAA5B0", "500": "#7A7581", "600": "#56525C" },
+            "acesso": { "200": "#C4ADFE", "300": "#A07CFF", "500": "#7A52E1" },
+            "neutral": { "50": "#FFFFFF", "100": "#F2F2F2", "200": "#D5D3D9", "300": "#AAA5B0", "400": "#7A7581", "500": "#56525C", "600": "#2D292E" },
+          },
+          fontFamily: {
+            "sans": ["REM", "ui-sans-serif", "system-ui", "sans-serif"],
+            "body": ['"Open Sans"', "ui-sans-serif", "sans-serif"],
+          },
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=REM:wght@400;500;600;700&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; font-family: 'Open Sans', sans-serif; }
+
+    .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; overflow: hidden; }
+    .screen.active { display: flex; }
+
+    .scroll-area { flex: 1; overflow-y: auto; }
+    .scroll-area::-webkit-scrollbar { width: 5px; }
+    .scroll-area::-webkit-scrollbar-track { background: transparent; }
+    .scroll-area::-webkit-scrollbar-thumb { background: #D5D3D9; border-radius: 3px; }
+
+    /* ── Global header ── */
+    .app-header { height: 56px; display: flex; align-items: center; padding: 0 20px; gap: 14px; background: #fff; border-bottom: 1px solid #D5D3D9; flex-shrink: 0; }
+    .app-logo { display: flex; align-items: center; gap: 6px; }
+    .app-logo span { font-family: 'REM', sans-serif; font-weight: 600; font-size: 15px; color: #8418AB; letter-spacing: -0.01em; }
+    .header-empresa { display: flex; align-items: center; gap: 6px; border: 1px solid #D5D3D9; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+    .header-empresa span { font-size: 13px; font-weight: 500; color: #2D292E; }
+    .header-search { display: flex; align-items: center; gap: 8px; border: 1px solid #D5D3D9; border-radius: 8px; padding: 6px 12px; width: 260px; }
+    .header-search span { font-size: 13px; color: #AAA5B0; }
+    .icon-btn-header { width: 36px; height: 36px; border-radius: 8px; border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: #8418AB; display: flex; align-items: center; justify-content: center; cursor: pointer; font-family: 'REM', sans-serif; font-size: 11px; font-weight: 700; color: #fff; }
+
+    /* ── Page subheader ── */
+    .page-subheader { height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 1px solid #F2F2F2; flex-shrink: 0; background: #fff; }
+    .page-title { font-size: 16px; font-weight: 700; color: #2D292E; }
+    .btn-primary { background: #8418AB; color: #fff; font-family: 'Open Sans', sans-serif; font-size: 13px; font-weight: 600; border: none; border-radius: 99px; padding: 8px 20px; cursor: pointer; transition: background 0.15s; }
+    .btn-primary:hover { background: #540B6E; }
+    .btn-secondary-outline { font-family: 'Open Sans', sans-serif; font-size: 13px; font-weight: 600; color: #7A7581; background: none; border: 1px solid #D5D3D9; border-radius: 99px; padding: 8px 20px; cursor: pointer; transition: all 0.15s; }
+    .btn-secondary-outline:hover { border-color: #AAA5B0; }
+
+    /* ── Configuration panel ── */
+    .config-panel { background: #FAFAFA; border-bottom: 1px solid #EBEBEB; padding: 16px 24px; flex-shrink: 0; }
+    .config-panel-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .config-label { font-size: 12px; font-weight: 600; color: #56525C; text-transform: uppercase; letter-spacing: 0.04em; }
+    .config-cadence-row { display: flex; align-items: center; gap: 10px; }
+
+    /* Toggle switch */
+    .toggle-track { position: relative; width: 32px; height: 18px; border-radius: 99px; background: #8418AB; cursor: pointer; transition: background 0.2s; flex-shrink: 0; border: none; padding: 0; outline: none; }
+    .toggle-track.off { background: #D5D3D9; }
+    .toggle-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(36,20,47,0.15); transition: transform 0.2s; }
+    .toggle-track:not(.off)::after { transform: translateX(14px); }
+
+    /* Cadence config states */
+    .cadence-config-empty { display: flex; align-items: center; gap: 8px; }
+    .cadence-config-empty span { font-size: 13px; color: #AAA5B0; font-style: italic; }
+    .btn-define-cadence { font-family: 'Open Sans', sans-serif; font-size: 12px; font-weight: 600; color: #8418AB; background: none; border: 1px solid #8418AB; border-radius: 99px; padding: 4px 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn-define-cadence:hover { background: #F5E8FA; }
+
+    .cadence-config-set { display: flex; align-items: center; gap: 8px; background: #F5E8FA; border: 1px solid #DEAAF4; border-radius: 8px; padding: 6px 12px; }
+    .cadence-config-set-text { font-size: 12px; color: #540B6E; font-weight: 500; max-width: 420px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .btn-edit-cadence { font-size: 11px; color: #8418AB; background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; font-family: 'Open Sans', sans-serif; white-space: nowrap; }
+
+    .cadence-config-disabled { display: flex; align-items: center; gap: 6px; }
+    .cadence-config-disabled span { font-size: 12px; color: #AAA5B0; }
+
+    /* ── Page intro ── */
+    .page-intro { text-align: center; padding: 28px 24px 20px; }
+    .page-intro h1 { font-size: 15px; font-weight: 700; color: #2D292E; margin: 0 0 8px; }
+    .page-intro p { font-size: 13px; color: #7A7581; margin: 0; line-height: 1.6; max-width: 680px; margin: 0 auto; }
+
+    /* ── Search bar ── */
+    .search-row { max-width: 900px; margin: 0 auto; padding: 0 24px 20px; display: flex; align-items: center; justify-content: space-between; position: relative; }
+    .search-field-wrap { position: relative; width: 300px; }
+    .search-input { width: 100%; border: 1px solid #D5D3D9; border-radius: 8px; padding: 7px 12px 7px 36px; font-family: 'Open Sans', sans-serif; font-size: 13px; color: #2D292E; outline: none; transition: border-color 0.15s, box-shadow 0.15s; background: #fff; }
+    .search-input:focus { border-color: #8418AB; box-shadow: 0 0 0 3px #F5E8FA; }
+    .search-input::placeholder { color: #AAA5B0; }
+    .search-icon-inside { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #AAA5B0; }
+    .search-dropdown { position: absolute; top: calc(100% + 4px); left: 0; width: 100%; background: #fff; border: 1px solid #D5D3D9; border-radius: 8px; box-shadow: 0 4px 16px rgba(36,20,47,0.12); z-index: 20; overflow: hidden; display: none; }
+    .search-dropdown.open { display: block; }
+    .search-dropdown-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; font-size: 13px; color: #2D292E; cursor: pointer; transition: background 0.1s; }
+    .search-dropdown-item:hover { background: #F5E8FA; }
+    .search-dropdown-item .company-initial { width: 28px; height: 28px; border-radius: 6px; background: #F2F2F2; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #7A7581; flex-shrink: 0; }
+    .search-dropdown-item .company-name { font-weight: 600; }
+    .search-dropdown-item .company-segment { font-size: 11px; color: #AAA5B0; }
+    .search-empty { padding: 12px; text-align: center; font-size: 13px; color: #AAA5B0; }
+    .simular-link { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: #8418AB; cursor: pointer; text-decoration: none; }
+    .simular-link:hover { text-decoration: underline; }
+
+    /* ── Dossier body ── */
+    .dossier-wrap { max-width: 900px; margin: 0 auto; padding: 0 24px 80px; }
+    .dossier-body { font-size: 13px; color: #2D292E; line-height: 1.65; }
+    .dossier-body strong { font-weight: 700; }
+    .dossier-body a { color: #7A52E1; text-decoration: underline; }
+    .dossier-body p { margin: 0 0 10px; }
+    .section-title { font-weight: 700; font-size: 13px; color: #2D292E; display: flex; align-items: center; gap: 6px; margin: 20px 0 8px; }
+
+    /* Skeleton */
+    .sk { background: #EBEBEB; border-radius: 4px; animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    /* Cadence section in dossier */
+    .cadence-section-header { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 8px; }
+    .cadence-default-block { font-size: 13px; color: #7A7581; font-style: italic; }
+    .cadence-ai-block { background: #F5E8FA; border-left: 3px solid #8418AB; border-radius: 0 6px 6px 0; padding: 12px 16px; }
+    .cadence-ai-badge { display: inline-flex; align-items: center; gap: 4px; background: #8418AB; color: #fff; font-size: 10px; font-weight: 600; border-radius: 99px; padding: 2px 8px; margin-bottom: 8px; }
+    .cadence-ai-content { font-size: 13px; color: #2D292E; white-space: pre-line; line-height: 1.6; }
+    .cadence-hint { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+    .cadence-hint span { font-size: 12px; color: #AAA5B0; }
+    .cadence-disabled-note { font-size: 13px; color: #AAA5B0; font-style: italic; }
+
+    /* Strategy section (iFood style) */
+    .strategy-block { font-size: 13px; color: #2D292E; line-height: 1.65; }
+    .strategy-block .trigger-item { margin-bottom: 4px; }
+
+    /* ── Modal ── */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(36,20,47,0.45); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .modal-backdrop.hidden { display: none; }
+    .modal-box { background: #fff; border-radius: 12px; box-shadow: 0 8px 40px rgba(36,20,47,0.2); width: 100%; max-width: 580px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 16px; border-bottom: 1px solid #F2F2F2; flex-shrink: 0; }
+    .modal-title { font-family: 'REM', sans-serif; font-size: 16px; font-weight: 700; color: #2D292E; margin: 0 0 3px; }
+    .modal-subtitle { font-size: 12px; color: #AAA5B0; margin: 0; }
+    .modal-close { width: 28px; height: 28px; border-radius: 6px; border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #AAA5B0; transition: background 0.15s; }
+    .modal-close:hover { background: #F2F2F2; }
+    .modal-tabs { display: flex; border-bottom: 1px solid #F2F2F2; padding: 0 24px; flex-shrink: 0; }
+    .m-tab { padding: 8px 16px; font-size: 14px; font-weight: 500; color: #7A7581; border-bottom: 2px solid transparent; cursor: pointer; transition: color 0.15s, border-color 0.15s; font-family: 'Open Sans', sans-serif; background: none; border-top: none; border-left: none; border-right: none; }
+    .m-tab.active { color: #8418AB; border-bottom-color: #8418AB; font-weight: 600; }
+    .m-tab:hover:not(.active) { color: #2D292E; border-bottom-color: #D5D3D9; }
+    .modal-body { padding: 20px 24px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .modal-footer { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid #F2F2F2; flex-shrink: 0; }
+    .field-label { font-size: 12px; font-weight: 600; color: #56525C; display: block; margin-bottom: 6px; }
+    .cadence-textarea { width: 100%; height: 200px; resize: vertical; font-family: 'Open Sans', sans-serif; font-size: 13px; color: #2D292E; border: 1px solid #D5D3D9; border-radius: 8px; padding: 12px; outline: none; line-height: 1.6; transition: border-color 0.15s; }
+    .cadence-textarea:focus { border-color: #8418AB; box-shadow: 0 0 0 3px #F5E8FA; }
+    .info-tip { display: flex; align-items: flex-start; gap: 8px; background: #F5E8FA; border-radius: 8px; padding: 10px 12px; }
+    .info-tip p { font-size: 12px; color: #540B6E; margin: 0; line-height: 1.5; }
+
+    /* Upload zone */
+    .upload-zone { border: 2px dashed #D5D3D9; border-radius: 8px; padding: 40px 24px; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+    .upload-zone:hover, .upload-zone.drag-over { border-color: #8418AB; background: #F5E8FA; }
+    .upload-zone.has-file { border-color: #009F7F; background: #DFF4F0; }
+    .upload-icon-wrap { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+
+    /* Notification toast — top-right, slides in from right */
+    .toast {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 200;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(36,20,47,0.14), 0 1px 4px rgba(36,20,47,0.08);
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      min-width: 280px;
+      max-width: 360px;
+      transform: translateX(calc(100% + 24px));
+      transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+    .toast-icon { flex-shrink: 0; margin-top: 1px; }
+    .toast-content { flex: 1; min-width: 0; }
+    .toast-title { font-family: 'Open Sans', sans-serif; font-size: 13px; font-weight: 700; color: #2D292E; margin: 0 0 2px; }
+    .toast-body  { font-family: 'Open Sans', sans-serif; font-size: 12px; color: #56525C; margin: 0; line-height: 1.4; }
+    .toast-close { flex-shrink: 0; background: none; border: none; cursor: pointer; color: #AAA5B0; padding: 0; display: flex; align-items: center; margin-top: 1px; transition: color 0.15s; }
+    .toast-close:hover { color: #2D292E; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════ SCREEN: DOSSIÊ ═══════════════════════ -->
+<section class="screen active" id="screen-dossie" data-layer="screen/dossie">
+
+  <!-- GLOBAL HEADER -->
+  <header class="app-header" data-layer="header/global">
+    <button style="display:flex;flex-direction:column;gap:4px;padding:6px;background:none;border:none;cursor:pointer;">
+      <span style="width:18px;height:2px;background:#AAA5B0;display:block;border-radius:1px;"></span>
+      <span style="width:18px;height:2px;background:#AAA5B0;display:block;border-radius:1px;"></span>
+      <span style="width:18px;height:2px;background:#AAA5B0;display:block;border-radius:1px;"></span>
+    </button>
+    <div class="app-logo">
+      <svg width="16" height="16" viewBox="0 0 159 159" fill="none"><path d="M79.49 53.17C69.79 53.17 68.15 49.67 68.15 41.83V11.34C68.15 3.5 69.79 0 79.49 0C89.19 0 90.83 3.5 90.83 11.34V41.83C90.83 49.67 89.19 53.17 79.49 53.17Z" fill="#8418AB"/><path d="M79.49 158.24C69.79 158.24 68.15 154.74 68.15 146.9V116.41C68.15 108.57 69.79 105.07 79.49 105.07C89.19 105.07 90.83 108.57 90.83 116.41V146.9C90.83 154.74 89.19 158.24 79.49 158.24Z" fill="#8418AB"/><path d="M103.92 79.12C103.92 69.42 107.42 67.78 115.26 67.78H147.63C155.47 67.78 158.97 69.42 158.97 79.12C158.97 88.82 155.47 90.46 147.63 90.46H115.26C107.42 90.46 103.92 88.82 103.92 79.12Z" fill="#8418AB"/><path d="M0 79.12C0 69.42 3.5 67.78 11.34 67.78H43.71C51.55 67.78 55.05 69.42 55.05 79.12C55.05 88.82 51.55 90.46 43.71 90.46H11.34C3.5 90.46 0 88.82 0 79.12Z" fill="#8418AB"/><path d="M33.13 140.26C19.35 140.26 16.58 133.93 16.58 123.71C16.58 113.49 19.35 107.16 33.13 107.16C46.91 107.16 49.68 113.49 49.68 123.71C49.68 133.93 46.91 140.26 33.13 140.26Z" fill="#8418AB"/><path d="M125.84 140.26C112.06 140.26 109.29 133.93 109.29 123.71C109.29 113.49 112.06 107.16 125.84 107.16C139.62 107.16 142.39 113.49 142.39 123.71C142.39 133.93 139.62 140.26 125.84 140.26Z" fill="#8418AB"/><path d="M33.13 51.08C19.35 51.08 16.58 44.75 16.58 34.53C16.58 24.31 19.35 17.98 33.13 17.98C46.91 17.98 49.68 24.31 49.68 34.53C49.68 44.75 46.91 51.08 33.13 51.08Z" fill="#8418AB"/><path d="M92.36 78.84C92.36 78.84 90.55 53.21 127.73 53.21C144.81 53.21 148.1 44.09 148.1 32.85C148.1 21.61 144.82 12.48 127.73 12.48C112.8 12.48 108.41 19.44 107.54 28.7C107.54 28.7 104.63 65.98 80.25 65.98H79.65C78.66 65.98 66.86 66.22 54.08 48.83C54.02 48.74 53.13 47.21 51.17 47.41C50.49 47.48 49.8 47.85 49.28 48.38C48.75 48.91 48.38 49.59 48.31 50.28C48.12 52.23 49.65 53.13 49.73 53.19C66.89 65.8 66.52 79.13 66.52 79.13C66.52 79.13 66.88 92.46 49.73 105.07C49.64 105.13 48.11 106.02 48.31 107.98C48.38 108.66 48.75 109.35 49.28 109.87C49.81 110.4 50.49 110.77 51.17 110.84C53.12 111.03 54.02 109.5 54.08 109.42C66.86 92.03 78.66 92.27 79.65 92.27C80.64 92.27 92.46 92.13 105.16 109.42C105.22 109.51 106.11 111.04 108.07 110.84C108.75 110.77 109.44 110.4 109.96 109.87C110.49 109.34 110.86 108.66 110.93 107.97C111.12 106.02 109.59 105.12 109.51 105.06C92.35 92.45 92.36 79.12 92.36 79.12V78.84Z" fill="#3CCBAC"/></svg>
+      <span>cortex</span>
+    </div>
+    <div style="flex:1;"></div>
+    <div class="header-empresa">
+      <span>Empresas</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AAA5B0" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="header-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AAA5B0" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <span>Buscar empresas</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;">
+      <button class="icon-btn-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8418AB" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+      <button class="icon-btn-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#AAA5B0" stroke-width="1.8"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button>
+      <div class="avatar">TN</div>
+    </div>
+  </header>
+
+  <!-- PAGE SUBHEADER -->
+  <div class="page-subheader" data-layer="header/breadcrumb">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button style="width:28px;height:28px;border-radius:6px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#AAA5B0" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="page-title">Dossiê de prospecção</span>
+    </div>
+    <button class="btn-primary">Confirmar</button>
+  </div>
+
+  <!-- PAGE INTRO — fixed, não rola com o conteúdo -->
+  <div style="text-align:center;padding:20px 24px 0;flex-shrink:0;background:#fff;" data-layer="header/intro">
+    <h1 style="font-size:15px;font-weight:700;color:#2D292E;margin:0 0 6px;font-family:'Open Sans',sans-serif;">Personalize o conteúdo e abordagem dos dossiês distribuídos</h1>
+    <p style="font-size:13px;color:#7A7581;margin:0 0 0;line-height:1.6;max-width:680px;display:inline-block;">Escolha quais informações devem estar no dossiê que será entregue para cada lead distribuído. Personalize a cadência padrão de abordagem: quantos toques, por quais canais, e etc.<br>Assim, o responsável terá um roteiro completo e personalizado para cada conta.</p>
+  </div>
+
+  <!-- CADENCE CONFIGURATION PANEL -->
+  <div class="config-panel" id="config-panel" data-layer="config/cadence">
+    <div class="config-panel-inner">
+      <!-- Left: label + status -->
+      <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+        <span class="config-label">Cadência</span>
+
+        <!-- State: empty (default) -->
+        <div class="cadence-config-empty" id="config-state-empty">
+          <span>Padrão da plataforma</span>
+          <button class="btn-define-cadence" onclick="openModal()">Personalizar</button>
+        </div>
+
+        <!-- State: defined -->
+        <div class="cadence-config-set" id="config-state-set" style="display:none;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8418AB" stroke-width="2.5" style="flex-shrink:0;"><path d="M20 6L9 17l-5-5"/></svg>
+          <span class="cadence-config-set-text" id="config-cadence-preview">—</span>
+          <button class="btn-edit-cadence" onclick="openModal()">Editar</button>
+        </div>
+
+        <!-- State: disabled -->
+        <div class="cadence-config-disabled" id="config-state-disabled" style="display:none;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#AAA5B0" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          <span>Não incluída no dossiê</span>
+        </div>
+      </div>
+
+      <!-- Right: toggle -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:#AAA5B0;" id="toggle-label">Incluir no dossiê</span>
+        <button class="toggle-track" id="cadence-toggle" onclick="toggleCadence()" aria-label="Incluir cadência no dossiê"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCROLLABLE CONTENT -->
+  <div class="scroll-area" data-layer="content/main">
+
+    <!-- Search row -->
+    <div class="search-row" style="padding-top:20px;" data-layer="content/search">
+      <div class="search-field-wrap">
+        <span class="search-icon-inside">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </span>
+        <input type="text" class="search-input" id="company-search" placeholder="Digite o nome da empresa" oninput="handleSearch(this.value)" onblur="setTimeout(()=>closeDropdown(),200)" autocomplete="off">
+        <div class="search-dropdown" id="search-dropdown"></div>
+      </div>
+      <a class="simular-link" onclick="simulateCompany(currentCompany)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8418AB" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        Simular
+      </a>
+    </div>
+
+    <!-- Dossier area -->
+    <div class="dossier-wrap" id="dossier-area" data-layer="content/dossier">
+      <!-- Filled by JS -->
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════ MODAL: CADÊNCIA ═══════════════════════ -->
+<div id="modal-cadence" class="modal-backdrop hidden" data-layer="modal/cadence">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Personalizar cadência</h2>
+        <p class="modal-subtitle">Defina a estrutura de abordagem que a IA usará como base ao gerar o dossiê</p>
+      </div>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-tabs">
+      <button class="m-tab active" id="tab-btn-text" onclick="switchTab('text')">Colar estrutura de texto</button>
+      <button class="m-tab" id="tab-btn-upload" onclick="switchTab('upload')">Importar arquivo</button>
+    </div>
+
+    <!-- Tab text -->
+    <div class="modal-body" id="tab-text">
+      <div>
+        <label class="field-label">Estrutura da cadência</label>
+        <textarea class="cadence-textarea" id="cadence-textarea" placeholder="Cole aqui a estrutura de cadência que a IA deve seguir ao gerar o dossiê...
+
+Exemplo:
+Dia 1 — E-mail de apresentação personalizado
+Dia 3 — LinkedIn: conexão + mensagem curta
+Dia 5 — Ligação: apresentação da solução
+Dia 8 — Follow-up com case de sucesso
+Dia 12 — E-mail de breakup"></textarea>
+      </div>
+      <div class="info-tip">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8418AB" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>A estrutura colada será usada como <strong>template base</strong> pela IA ao gerar a seção de cadência em cada dossiê. O conteúdo será adaptado automaticamente para o perfil de cada lead.</p>
+      </div>
+    </div>
+
+    <!-- Tab upload -->
+    <div class="modal-body" id="tab-upload" style="display:none;">
+      <div>
+        <label class="field-label">Importar arquivo de cadência</label>
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
+          <input type="file" id="file-input" accept=".txt,.docx,.pdf,.md" style="display:none;" onchange="handleFileSelect(event)">
+          <div id="upload-placeholder">
+            <div class="upload-icon-wrap" style="background:#F5E8FA;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8418AB" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <p style="font-size:13px;font-weight:600;color:#2D292E;margin:0 0 4px;">Arraste o arquivo aqui</p>
+            <p style="font-size:12px;color:#AAA5B0;margin:0 0 12px;">ou clique para selecionar</p>
+            <span style="font-size:11px;color:#AAA5B0;background:#F2F2F2;border-radius:4px;padding:3px 8px;">.txt · .docx · .pdf · .md</span>
+          </div>
+          <div id="upload-success" style="display:none;">
+            <div class="upload-icon-wrap" style="background:#DFF4F0;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#009F7F" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <p id="file-name-display" style="font-size:13px;font-weight:600;color:#2D292E;margin:0 0 4px;"></p>
+            <p style="font-size:12px;color:#009F7F;margin:0 0 10px;">Arquivo carregado com sucesso</p>
+            <button onclick="clearFile(event)" style="font-size:12px;color:#AAA5B0;background:none;border:none;cursor:pointer;text-decoration:underline;font-family:'Open Sans',sans-serif;">Remover</button>
+          </div>
+        </div>
+      </div>
+      <div class="info-tip">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8418AB" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>O conteúdo do arquivo será lido e usado como <strong>template base</strong> pela IA. Formatos aceitos: texto simples, Word e PDF.</p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveCadence()">Salvar cadência</button>
+    </div>
+  </div>
+</div>
+
+<!-- Alert modal: confirmar remoção de cadência customizada -->
+<div id="modal-alert-clear" class="modal-backdrop hidden" data-layer="modal/alert-clear" onclick="if(event.target===this)closeClearAlert()">
+  <div style="background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(36,20,47,0.2);width:100%;max-width:420px;padding:28px 28px 24px;display:flex;flex-direction:column;gap:0;" onclick="event.stopPropagation()">
+    <!-- Icon -->
+    <div style="width:40px;height:40px;border-radius:10px;background:#FFF3E0;display:flex;align-items:center;justify-content:center;margin-bottom:16px;flex-shrink:0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <!-- Title -->
+    <h2 style="font-family:'REM',sans-serif;font-size:17px;font-weight:700;color:#2D292E;margin:0 0 10px;line-height:1.3;">Tem certeza que deseja salvar?</h2>
+    <!-- Body -->
+    <p style="font-family:'Open Sans',sans-serif;font-size:13px;color:#56525C;margin:0 0 24px;line-height:1.6;">A cadência padrão da Cortex será utilizada na elaboração do dossiê.<br>Deseja continuar?</p>
+    <!-- Buttons -->
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;">
+      <button onclick="closeClearAlert()" style="font-family:'Open Sans',sans-serif;font-size:13px;font-weight:600;color:#7A7581;background:#fff;border:1.5px solid #D5D3D9;border-radius:99px;padding:8px 22px;cursor:pointer;transition:border-color 0.15s;" onmouseover="this.style.borderColor='#AAA5B0'" onmouseout="this.style.borderColor='#D5D3D9'">Cancelar</button>
+      <button onclick="confirmClearCadence()" style="font-family:'Open Sans',sans-serif;font-size:13px;font-weight:600;color:#fff;background:#8418AB;border:none;border-radius:99px;padding:8px 22px;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#540B6E'" onmouseout="this.style.background='#8418AB'">Sim</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification toast — top-right -->
+<div id="toast" class="toast" role="alert" aria-live="polite">
+  <div class="toast-icon">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#3CCBAC" stroke-width="2"/><path d="M8 12l3 3 5-5" stroke="#3CCBAC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="toast-content">
+    <p class="toast-title" id="toast-title">Alterações salvas com sucesso!</p>
+    <p class="toast-body"  id="toast-body">Todos os dados foram salvos com sucesso.</p>
+  </div>
+  <button class="toast-close" onclick="hideToast()" aria-label="Fechar">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────
+const state = {
+  cadenceEnabled: true,
+  cadenceText: null,       // null = padrão, string = customizado
+  currentCompany: 'cortex', // empresa sendo simulada
+};
+
+const COMPANIES = [
+  { id: 'cortex', name: 'Cortex Intelligence', segment: 'Tecnologia da Informação', size: 'Médio porte' },
+  { id: 'ifood',  name: 'iFood',               segment: 'Desenvolvimento de Software', size: 'Grande porte' },
+  { id: 'rdstation', name: 'RD Station',       segment: 'SaaS / Martech', size: 'Médio porte' },
+  { id: 'totvs', name: 'TOTVS',               segment: 'ERP / Software de Gestão', size: 'Grande porte' },
+];
+
+// ── DOSSIER DATA ───────────────────────────────────────────────────
+const DOSSIERS = {
+  cortex: {
+    greeting: 'CORTEX INTELLIGENCE TECNOLOGIA LTDA',
+    intro: 'uma empresa brasileira de porte médio especializada em tecnologia da informação, com faturamento estimado entre R$10 milhões e R$30 milhões. A Cortex é reconhecida como a principal plataforma nacional em inteligência aumentada aplicada ao go-to-market, investindo intensamente em big data e inteligência artificial na América Latina.',
+    resumo: { segmento: 'TECNOLOGIA DA INFORMACAO', faturamento: 'R$10M - R$30M', propensao: 'BAIXO (37.13)', contactabilidade: 'ALTO (100.02)' },
+    aderencia: 'A Cortex Intelligence se enquadra no segmento de Tecnologia da Informação, com foco em desenvolvimento de software e inteligência aumentada aplicada ao go-to-market. Fit confirmado.',
+    timing: 'Uma notícia recente, publicada em 28/04/2026, destaca a ampliação da parceria da Cortex com a plataforma Snowflake Intelligence.',
+    sinais: 'Posts recentes no LinkedIn demonstram engajamento da Cortex com temas de inteligência de mercado e estratégias de expansão.',
+    contatos: [
+      { nome: 'Arlan Aguiar', cargo: 'Coordenador RevOps', papel: 'Influenciador', obs: 'Profissional multidisciplinar com experiência em revenue operations e customer success.' },
+      { nome: 'Camila Nobre', cargo: 'Analista de Marketing', papel: 'Influenciador', obs: 'Profissional de marketing com foco em estratégias digitais e geração de demanda.' },
+    ],
+    estrategia: null,
+    cadenciaPadrao: 'Dia 1 — LinkedIn: conexão + mensagem de apresentação\nDia 3 — E-mail com análise de mercado relevante\nDia 6 — Ligação: qualificação e apresentação da solução\nDia 10 — Follow-up por e-mail com case de sucesso\nDia 14 — E-mail de breakup',
+  },
+  ifood: {
+    greeting: 'IFOOD.COM AGÊNCIA DE RESTAURANTES ONLINE S.A.',
+    intro: 'uma grande empresa brasileira de desenvolvimento de software com faturamento acima de R$1 bilhão. Referência no segmento de food tech na América Latina, a iFood enfrenta um momento de declínio em sua tendência de crescimento, tornando-se uma oportunidade estratégica para apresentar soluções de inteligência comercial.',
+    resumo: { segmento: 'DESENVOLVIMENTO DE SOFTWARE', faturamento: 'Acima de R$1B', propensao: 'MÉDIO (54.20)', contactabilidade: 'ALTO (98.4)' },
+    aderencia: 'A iFood se enquadra no perfil ideal: grande porte, alta contactabilidade e momento de pressão competitiva. Decisores com perfil analítico e foco em crescimento sustentável.',
+    timing: 'Novo contato com perfil decisor assumiu cargo estratégico de Software Engineer Manager em Tech Growth. Histórico recente de oportunidades em Vendas B2B focadas em crescimento e inovação (Q1\'26).',
+    sinais: 'Presença ativa de líderes sêniors com expertise em growth, inteligência comercial e eficiência de vendas, demonstrando abertura para abordagens que ofereçam suporte analítico e tecnológico.',
+    contatos: [
+      { nome: 'Alan Haddad', cargo: 'Senior Head of Sales Innovation Projects Product & New Markets', papel: 'Decisor', obs: 'Lidera projetos de inovação, expansão de novos canais e estratégias comerciais, com extensa experiência regional.' },
+      { nome: 'Adriano Pamplona Trindade', cargo: 'Business Intelligence Manager Commercial Planning', papel: 'Influenciador', obs: 'Gerencia equipe multidisciplinar, desenvolve análises e aplica IA para insights estratégicos.' },
+      { nome: 'Adriano Dessotti', cargo: 'Senior Growth Coordinator', papel: 'Influenciador', obs: 'Coordena equipe de BI focada em análise de dados, forecasting e criação de dashboards para crescimento.' },
+    ],
+    estrategia: {
+      narrativa: 'A iFood, uma grande empresa de desenvolvimento de software com faturamento acima de R$1 bilhão, enfrenta um momento de declínio em sua tendência de crescimento. Considerando seu perfil inovador e a estrutura de time de marketing e comercial altamente analítica, nossa solução pode contribuir para otimizar a eficiência operacional e identificar alavancas de crescimento por meio de insights baseados em dados.',
+      gatilhos: [
+        'Novo contato com perfil decisor assumiu cargo estratégico de software engineer manager em tech growth, indicando oportunidade para apresentar soluções alinhadas à inovação tecnológica.',
+        'Histórico recente de oportunidades em vendas B2B e iniciativas focadas em crescimento e inovação revelam interesse em aprimorar processos comerciais (ver oportunidades no CRM relacionadas a Q1\'26).',
+        'Presença ativa de líderes sêniors com expertise em growth, inteligência comercial e eficiência de vendas.',
+      ],
+    },
+    cadenciaPadrao: 'Dia 01 — LinkedIn (Conexão Inicial): Enviar pedido de conexão com mensagem personalizada. Mensagem-chave: Apresentar como a solução pode apoiar a iFood.\nDia 02 — Ligação + WhatsApp: Primeira abordagem direta. Ligação curta com mini-pitch e one-pager.\nDia 04 — Ligação + E-mail: Reforçar valor da solução. Reenviar conexão e one-pager com diferencial.\nDia 05 — E-mail (Problema x Solução): Conectar dores com solução. Enviar e-mail comparando desafios do setor.\nDia 08 — Ligação + E-mail (Mini Case): Demonstrar prova social. Compartilhar mini-case de cliente relevante.\nDia 10 — WhatsApp + LinkedIn + Ligação + E-mail: Reforçar ganhos com presença multicanal.\nDia 12 — E-mail + WhatsApp ("Canelada"): Última tentativa. Mensagem curta e direta pedindo retorno.',
+  },
+  rdstation: {
+    greeting: 'RD STATION SERVIÇOS DE INTERNET S.A.',
+    intro: 'uma empresa brasileira de médio porte especializada em automação de marketing e CRM, com faturamento estimado entre R$100M e R$500M. Referência em Marketing Digital no Brasil, com forte presença no segmento de PMEs.',
+    resumo: { segmento: 'SAAS / MARTECH', faturamento: 'R$100M - R$500M', propensao: 'ALTO (72.40)', contactabilidade: 'MÉDIO (81.3)' },
+    aderencia: 'RD Station tem perfil altamente aderente: empresa de tecnologia com maturidade analítica, foco em crescimento e expansão de base. Fit confirmado com propensão alta.',
+    timing: 'A empresa anunciou expansão para mercado hispanohablante em Q2\'26, sinalizando momento de escala e necessidade de inteligência de mercado para novos territórios.',
+    sinais: 'Engajamento recente com conteúdo sobre GTM em novos mercados e estratégias de expansão B2B no LinkedIn.',
+    contatos: [
+      { nome: 'Rodrigo Noll', cargo: 'VP de Vendas', papel: 'Decisor', obs: 'Responsável pela estratégia de crescimento de receita e expansão de canais comerciais.' },
+      { nome: 'Fernanda Castro', cargo: 'Head of Revenue Operations', papel: 'Influenciador', obs: 'Lidera operações de receita com foco em eficiência e previsibilidade de pipeline.' },
+    ],
+    estrategia: null,
+    cadenciaPadrao: 'Dia 1 — E-mail de apresentação com benchmark de mercado\nDia 3 — LinkedIn: conexão com VP de Vendas\nDia 5 — Ligação: foco em expansão para LATAM\nDia 8 — Follow-up com case de cliente similar\nDia 12 — E-mail de breakup',
+  },
+  totvs: {
+    greeting: 'TOTVS S.A.',
+    intro: 'uma grande empresa brasileira de tecnologia especializada em ERP e software de gestão empresarial, com faturamento acima de R$2 bilhões. Maior empresa de tecnologia da América Latina, com presença em mais de 40 países.',
+    resumo: { segmento: 'ERP / SOFTWARE DE GESTÃO', faturamento: 'Acima de R$2B', propensao: 'MÉDIO (48.10)', contactabilidade: 'ALTO (94.7)' },
+    aderencia: 'TOTVS tem estrutura de vendas complexa com múltiplos decisores. Alto potencial de impacto com solução de inteligência de mercado para equipes comerciais e de marketing.',
+    timing: 'Lançamento recente do TOTVS CRM SaaS abre oportunidade de posicionamento complementar no ecossistema de go-to-market da empresa.',
+    sinais: 'Diretores de produto engajados com conteúdo sobre inteligência de dados B2B e automação de processos comerciais.',
+    contatos: [
+      { nome: 'Gilsinei Hansen', cargo: 'VP Comercial', papel: 'Decisor', obs: 'Lidera estratégia comercial nacional com foco em crescimento de receita e expansão de clientes enterprise.' },
+      { nome: 'Marcelo Moura', cargo: 'Diretor de Marketing', papel: 'Influenciador', obs: 'Responsável por estratégias de demand generation e posicionamento de marca no mercado B2B.' },
+    ],
+    estrategia: null,
+    cadenciaPadrao: 'Dia 1 — E-mail C-Level com visão estratégica\nDia 3 — LinkedIn: VP Comercial + Diretor de Marketing\nDia 6 — Ligação com VP: foco em eficiência da força de vendas\nDia 10 — Envio de material: benchmark setor ERP\nDia 14 — Follow-up multicanal\nDia 18 — E-mail de breakup',
+  },
+};
+
+// ── RENDER DOSSIER ────────────────────────────────────────────────
+function renderDossier(companyId, loading = false) {
+  const area = document.getElementById('dossier-area');
+
+  if (loading) {
+    area.innerHTML = `
+      <div style="padding-top:8px;">
+        <div class="sk" style="height:12px;width:60%;margin-bottom:8px;"></div>
+        <div class="sk" style="height:10px;width:90%;margin-bottom:6px;"></div>
+        <div class="sk" style="height:10px;width:75%;margin-bottom:6px;"></div>
+        <div class="sk" style="height:10px;width:82%;margin-bottom:20px;"></div>
+        <div class="sk" style="height:11px;width:30%;margin-bottom:10px;"></div>
+        <div class="sk" style="height:10px;width:40%;margin-bottom:5px;"></div>
+        <div class="sk" style="height:10px;width:38%;margin-bottom:5px;"></div>
+        <div class="sk" style="height:10px;width:42%;margin-bottom:5px;"></div>
+        <div class="sk" style="height:10px;width:35%;margin-bottom:20px;"></div>
+        <div class="sk" style="height:11px;width:35%;margin-bottom:10px;"></div>
+        <div class="sk" style="height:10px;width:95%;margin-bottom:5px;"></div>
+        <div class="sk" style="height:10px;width:88%;margin-bottom:5px;"></div>
+        <div class="sk" style="height:10px;width:91%;margin-bottom:20px;"></div>
+        <div class="sk" style="height:60px;width:100%;margin-bottom:20px;border-radius:6px;"></div>
+        <div class="sk" style="height:60px;width:100%;border-radius:6px;"></div>
+      </div>`;
+    return;
+  }
+
+  const d = DOSSIERS[companyId];
+  if (!d) return;
+
+  // Cadence section HTML
+  let cadenceHtml = '';
+  if (!state.cadenceEnabled) {
+    cadenceHtml = `
+      <div class="cadence-section-header">
+        <div class="section-title" style="margin:0;">📅 Sugestão de cadência</div>
+      </div>
+      <p class="cadence-disabled-note">Seção de cadência desativada para este dossiê.</p>`;
+  } else if (state.cadenceText) {
+    // Custom cadence — AI adapts it
+    const adapted = adaptCadence(state.cadenceText, d);
+    cadenceHtml = `
+      <div class="cadence-section-header">
+        <div class="section-title" style="margin:0;">📅 Sugestão de cadência</div>
+      </div>
+      <div class="cadence-ai-block">
+        <div class="cadence-ai-badge">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+          Cadência personalizada · adaptada por IA para ${d.greeting.split(' ')[0]}
+        </div>
+        <p class="cadence-ai-content">${adapted}</p>
+      </div>
+      <div class="cadence-hint">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#AAA5B0" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Gerada com base no template de cadência configurado. Adaptada ao perfil deste lead.</span>
+      </div>`;
+  } else {
+    // Default cadence
+    cadenceHtml = `
+      <div class="cadence-section-header">
+        <div class="section-title" style="margin:0;">📅 Sugestão de cadência</div>
+      </div>
+      <p style="font-size:13px;color:#2D292E;white-space:pre-line;line-height:1.65;margin:0;">${d.cadenciaPadrao}</p>
+      <div class="cadence-hint" style="margin-top:8px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#AAA5B0" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Cadência padrão da plataforma. <a href="#" onclick="openModal();return false;" style="color:#8418AB;">Personalizar com seu template →</a></span>
+      </div>`;
+  }
+
+  // Strategy section (only iFood has it, or when custom cadence is set)
+  let estrategiaHtml = '';
+  if (d.estrategia) {
+    estrategiaHtml = `
+      <div class="section-title">🎯 Estratégia Recomendada</div>
+      <div class="strategy-block">
+        <p><strong>Narrativa sugerida:</strong> ${d.estrategia.narrativa}</p>
+        <p style="margin-bottom:6px;"><strong>Gatilhos para abordagem:</strong></p>
+        ${d.estrategia.gatilhos.map(g => `<p class="trigger-item">• ${g}</p>`).join('')}
+      </div>`;
+  }
+
+  area.innerHTML = `
+    <div class="dossier-body">
+      <p>🤝 Olá,</p>
+      <p>Você está recebendo a conta da <strong>${d.greeting}</strong>, ${d.intro}</p>
+
+      <div class="section-title">📁 Resumo da Conta</div>
+      <p>
+        Segmento: ${d.resumo.segmento}<br>
+        Faturamento Estimado: ${d.resumo.faturamento}<br>
+        Propensão: ${d.resumo.propensao}<br>
+        Contactabilidade: ${d.resumo.contactabilidade}<br>
+        <a href="#">LinkedIn da Empresa</a><br>
+        <a href="#">Página da empresa no Leads Explorer</a>
+      </p>
+
+      <div class="section-title">🔍 Aderência e momento</div>
+      <p><strong>Análise de aderência:</strong> ${d.aderencia}</p>
+      <p><strong>Análise de timing:</strong> ${d.timing} <a href="#">Link</a></p>
+      <p><strong>Sinais de interesse:</strong> ${d.sinais} <a href="#">Link</a></p>
+
+      ${estrategiaHtml}
+
+      <div class="section-title">👥 Principais Contatos</div>
+      ${d.contatos.map(c => `
+        <p>
+          <strong>${c.nome}</strong><br>
+          Cargo: ${c.cargo}<br>
+          Papel: ${c.papel}<br>
+          Observação: ${c.obs}<br>
+          <a href="#">Ver contato no Leads Explorer</a>
+        </p>`).join('')}
+
+      ${cadenceHtml}
+    </div>`;
+}
+
+// Adapt custom cadence template to company profile
+function adaptCadence(template, d) {
+  const companyFirst = d.greeting.split(' ')[0];
+  // Simple adaptation: insert company name contextually in first line
+  const lines = template.split('\n');
+  if (lines.length > 0) {
+    const adapted = lines.map((line, i) => {
+      if (i === 0 && !line.includes(companyFirst)) {
+        return line + ` (contextualize para ${companyFirst})`;
+      }
+      return line;
+    });
+    return adapted.join('\n');
+  }
+  return template;
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────
+let currentCompany = 'cortex';
+
+function handleSearch(val) {
+  const dropdown = document.getElementById('search-dropdown');
+  const q = val.toLowerCase().trim();
+  if (!q) { dropdown.classList.remove('open'); return; }
+
+  const matches = COMPANIES.filter(c =>
+    c.name.toLowerCase().includes(q) || c.segment.toLowerCase().includes(q)
+  );
+
+  if (matches.length === 0) {
+    dropdown.innerHTML = `<div class="search-empty">Nenhum resultado encontrado</div>`;
+  } else {
+    dropdown.innerHTML = matches.map(c => `
+      <div class="search-dropdown-item" onclick="selectCompany('${c.id}', '${c.name}')">
+        <div class="company-initial">${c.name.charAt(0)}</div>
+        <div>
+          <div class="company-name">${c.name}</div>
+          <div class="company-segment">${c.segment} · ${c.size}</div>
+        </div>
+      </div>`).join('');
+  }
+  dropdown.classList.add('open');
+}
+
+function closeDropdown() {
+  document.getElementById('search-dropdown').classList.remove('open');
+}
+
+function selectCompany(id, name) {
+  currentCompany = id;
+  document.getElementById('company-search').value = name;
+  closeDropdown();
+  simulateCompany(id);
+}
+
+function simulateCompany(id) {
+  if (!id) return;
+  currentCompany = id;
+  renderDossier(id, true);
+  setTimeout(() => renderDossier(id, false), 1200);
+}
+
+// ── TOGGLE ────────────────────────────────────────────────────────
+function toggleCadence() {
+  state.cadenceEnabled = !state.cadenceEnabled;
+  const toggle = document.getElementById('cadence-toggle');
+  toggle.classList.toggle('off', !state.cadenceEnabled);
+  updateConfigPanel();
+  // Re-render dossier to reflect toggle state
+  renderDossier(currentCompany, false);
+  showToast(state.cadenceEnabled ? 'Cadência incluída no dossiê' : 'Cadência removida do dossiê',
+            state.cadenceEnabled ? 'A seção de cadência será gerada no dossiê.' : 'O dossiê será gerado sem a seção de cadência.');
+}
+
+function updateConfigPanel() {
+  const empty   = document.getElementById('config-state-empty');
+  const set     = document.getElementById('config-state-set');
+  const disabled = document.getElementById('config-state-disabled');
+  const label   = document.getElementById('toggle-label');
+
+  if (!state.cadenceEnabled) {
+    empty.style.display = 'none';
+    set.style.display = 'none';
+    disabled.style.display = 'flex';
+    label.textContent = 'Desativada';
+  } else if (state.cadenceText) {
+    empty.style.display = 'none';
+    set.style.display = 'flex';
+    disabled.style.display = 'none';
+    label.textContent = 'Incluir no dossiê';
+    const preview = state.cadenceText.split('\n')[0].substring(0, 55);
+    document.getElementById('config-cadence-preview').textContent = preview + (state.cadenceText.length > 55 ? '…' : '');
+  } else {
+    empty.style.display = 'flex';
+    set.style.display = 'none';
+    disabled.style.display = 'none';
+    label.textContent = 'Incluir no dossiê';
+  }
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('modal-cadence').classList.remove('hidden');
+  if (state.cadenceText) {
+    document.getElementById('cadence-textarea').value = state.cadenceText;
+  }
+}
+function closeModal() {
+  document.getElementById('modal-cadence').classList.add('hidden');
+}
+document.getElementById('modal-cadence').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+function switchTab(tab) {
+  document.getElementById('tab-btn-text').classList.toggle('active', tab === 'text');
+  document.getElementById('tab-btn-upload').classList.toggle('active', tab === 'upload');
+  document.getElementById('tab-text').style.display   = tab === 'text'   ? 'flex' : 'none';
+  document.getElementById('tab-upload').style.display = tab === 'upload' ? 'flex' : 'none';
+}
+
+function saveCadence() {
+  const activeTab = document.getElementById('tab-btn-text').classList.contains('active') ? 'text' : 'upload';
+  let content = '';
+  if (activeTab === 'text') {
+    content = document.getElementById('cadence-textarea').value.trim();
+  } else {
+    const fname = document.getElementById('file-name-display').textContent;
+    content = fname ? `Template importado de: ${fname}\n\nDia 1 — E-mail de apresentação personalizado\nDia 3 — LinkedIn: conexão + mensagem\nDia 5 — Ligação de qualificação\nDia 8 — Follow-up com case\nDia 12 — E-mail de breakup` : '';
+  }
+
+  // Se tinha customização e agora está vazio → exibir alerta de confirmação
+  if (!content && state.cadenceText) {
+    closeModal();
+    document.getElementById('modal-alert-clear').classList.remove('hidden');
+    return;
+  }
+
+  if (!content) { showToast('Nenhuma estrutura definida', 'Adicione uma estrutura de cadência antes de salvar.'); return; }
+  applySaveCadence(content);
+}
+
+function closeClearAlert() {
+  document.getElementById('modal-alert-clear').classList.add('hidden');
+  // Reabre o modal de edição para o usuário continuar
+  openModal();
+}
+
+function confirmClearCadence() {
+  document.getElementById('modal-alert-clear').classList.add('hidden');
+  state.cadenceText = null;
+  updateConfigPanel();
+  renderDossier(currentCompany, true);
+  setTimeout(() => { renderDossier(currentCompany, false); showToast('Cadência padrão restaurada', 'A cadência padrão da Cortex será utilizada no dossiê.'); }, 1000);
+}
+
+function applySaveCadence(content) {
+  state.cadenceText = content;
+  if (!state.cadenceEnabled) { state.cadenceEnabled = true; document.getElementById('cadence-toggle').classList.remove('off'); }
+  updateConfigPanel();
+  closeModal();
+  renderDossier(currentCompany, true);
+  setTimeout(() => { renderDossier(currentCompany, false); showToast('Alterações salvas com sucesso!', 'Cadência personalizada aplicada ao dossiê.'); }, 1000);
+}
+
+// ── FILE UPLOAD ───────────────────────────────────────────────────
+function handleFileSelect(e) { if (e.target.files[0]) showFileSuccess(e.target.files[0].name); }
+function handleDragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('drag-over'); }
+function handleDragLeave() { document.getElementById('upload-zone').classList.remove('drag-over'); }
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) showFileSuccess(e.dataTransfer.files[0].name);
+}
+function showFileSuccess(name) {
+  document.getElementById('upload-placeholder').style.display = 'none';
+  document.getElementById('upload-success').style.display = 'block';
+  document.getElementById('file-name-display').textContent = name;
+  document.getElementById('upload-zone').classList.add('has-file');
+}
+function clearFile(e) {
+  e.stopPropagation();
+  document.getElementById('upload-placeholder').style.display = 'block';
+  document.getElementById('upload-success').style.display = 'none';
+  document.getElementById('upload-zone').classList.remove('has-file');
+  document.getElementById('file-input').value = '';
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+let toastTimer = null;
+
+function showToast(title, body) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-body').textContent  = body || 'Todos os dados foram salvos com sucesso.';
+  toast.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 5000);
+}
+
+function hideToast() {
+  document.getElementById('toast').classList.remove('show');
+  if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeClearAlert();
+  }
+});
+
+// ── INIT ──────────────────────────────────────────────────────────
+renderDossier('cortex');
+</script>
+</body>
+</html>
